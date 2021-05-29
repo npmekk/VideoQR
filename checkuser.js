@@ -88,6 +88,7 @@ function checkRole() {
                 var Email = '';
                 var Roleid = '';
                 var Userid = '';
+				var Company = '';
                 
                 if (typeof entity.Email !== 'undefined') {
                     Email = entity.Email._;  
@@ -113,9 +114,14 @@ function checkRole() {
                         document.getElementById("navEmbed").style.display = "block";
 		                document.getElementById("navVideo").style.display = "block";
                     }
-                    console.log("User Role in Azure: " + userRole);
+                    console.log("User Role: " + userRole);
                 }
-
+				
+				if (typeof entity.Company!== 'undefined') {
+                    Company = entity.Company._;
+					console.log("Company Name:" + Company);
+				}
+				
                 if (typeof entity.Userid !== 'undefined') {
                     Userid = entity.Userid._;
                     azureuid = Userid;
@@ -126,6 +132,7 @@ function checkRole() {
                                 '<td>', Email, '</td>',
                                 '<td>', Roleid, '</td>',
                                 '<td>', Userid, '</td>',
+								'<td>', Company, '</td>',
                                 
                             '</tr>');
             }
