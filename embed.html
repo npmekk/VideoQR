@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="https://fonts.googleapis.com/css?family=Raleway:100,300,400,500,700,900" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/7.4.0/firebase.js"></script>
+    <script src="firebaseconfig.js" charset="utf-8"></script>
+
+    <title>Embed Links</title>
+    <footer style="width: auto; height: 145px;"></footer> 
+    
+       
+        
+        <!-- Additional CSS Files -->
+        <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
+    
+        <link rel="stylesheet" type="text/css" href="assets/css/font-awesome.css">
+    
+        <link rel="stylesheet" href="assets/css/templatemo-softy-pinko.css">
+    </head>
+        <body style="font-family: Didot, serif;">
+        
+        <!-- ***** Preloader Start ***** -->
+        <div id="preloader">
+            <div class="jumper">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>  
+        <!-- ***** Preloader End ***** -->
+        
+        
+        <!-- ***** Header Area Start ***** -->
+        <header class="header-area header-sticky">
+            <div class="container" style="margin-right: 450px;">
+                <div class="row" style="width: 1300px;">
+                    <div class="col-12">
+                        <nav class="main-nav" style="margin: auto;">
+                            <!-- ***** Logo Start ***** -->
+                            <a href="home.html" class="logo">
+                                <img src="assets/images/logo.png" alt="TinyEpicBrains logo" width="140" height="35" />
+                            </a>
+                            <!-- ***** Logo End ***** -->
+                            <!-- ***** Menu Start ***** -->
+                            <ul class="nav">
+                                    <li><a id="navUser"href="listuser.html" style="display:none;padding:0;">User Management</a></li>
+									<li><a id="navEmbed" href="embed.html" class="active" style="display:none; padding:0;">Embed Links</a></li>
+									<li><a id="navVideo" href="listfile.html" style="display:none; padding:0;">Video Information</a></li>
+									<li><a id="navGenqr"href="shortURL.html" style="padding:0;">Generate QR Code</a></li>
+                                <button id="signOutBtn" class="btn danger">Logout</button>
+                            </ul>
+                            <a class='menu-trigger'>
+                                <span>Menu</span>
+                            </a>
+                            <!-- ***** Menu End ***** -->
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </header>
+    
+        <!-- ***** Header Area End ***** -->
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="./main.css">
+
+    <link rel="stylesheet" href="./Validation/Validation Box.css">
+
+
+    <div id= "myDIV" style = "display:none; margin: auto; width: 50%;">
+        <h2 style="text-align: center;margin-top: 35px; font-size: 40px;">Embed Video</h2>
+        <img src="assets/images/instruction.png" style="width: 1200px; height: 300px; margin-left: -125px;" alt="">
+        
+        <video id="targetVideo" controls style="margin: auto; width: 100%; border-style: groove;"> </video>
+        <canvas style="display:none;" id="video-canvas"></canvas>
+        
+        
+        <form>
+            <button type="button" class="gbutton effect01" id="add" onclick="addLink()">Add Link</button>
+            
+            
+            <br><br>
+            <label>
+                <b>Project Name </b>
+              </label> 
+              <input type="text"  id="name"  placeholder="Your Project Name" required>
+            <!-- KEEP IT THERE-->
+            <input type="text"  id="fn" />
+            <input type="text" id="fs" />
+            <!--  -->
+            <div id="addlink"></div>
+            <button type="button" class="gbutton effect01" style="margin-top: 20px; margin-left: 80%; margin-bottom: 20px;" id="myBtn">Submit</button>
+            
+            <div  id="myModal" class="modal">
+                <div class="modal-content" style="left:10%;">
+                    <div class="modal-header">
+                      <h2>Confirmation</h2>
+                    </div>
+                    <div class="modal-body">
+                        <div id="validatelink"></div>
+                         <button type="button" class="gbutton effect01" id="Submit" onclick="addEntity1();" style="margin-left: 80%; margin-top: 10px;">Confirm</button>
+                    </div>
+                    <div class="modal-footer">
+                      <h3>Please check before Confirm</h3>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+
+     </div>
+    
+    <!-- ***** Function Area Start ***** -->
+    <div id="upload">
+        <div class="drop-zone">
+            <span class="drop-zone__prompt">Drop file here or click to upload</span>
+            <input type="file" accept="video/*" class="drop-zone__input" id="file-input" multiple style="display: none;"/>
+        </div>
+    </div>
+   
+
+    
+    <div id="info" style="display:none;margin:auto;width:100%;">
+        
+    </div>
+    <!-- ***** Function Area End ***** -->
+
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="assets/js/jquery-2.1.0.min.js"></script>
+
+    <!-- Bootstrap -->
+    <script src="assets/js/popper.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+
+    <!-- Plugins -->
+    <script src="assets/js/scrollreveal.min.js"></script>
+    <script src="assets/js/waypoints.min.js"></script>
+    <script src="assets/js/jquery.counterup.min.js"></script>
+    <script src="assets/js/imgfix.min.js"></script> 
+    
+    <!-- Global Init -->
+    <script src="assets/js/custom.js"></script>
+    
+</body>
+
+</html>
+
+<script src="http://hongru.github.io/proj/canvas2image/canvas2image.js"></script>
+<script src="azure-storage-blob.js" charset="utf-8"></script>
+<script src="azure-storage.table.js"></script>
+
+<script src="script1.js"></script>
+<script src="script2.js"></script>
+<script src="script3.js"></script>
+<script src="sendAPI.js"></script>
+<script src="genRowKey.js"></script>
+<script src="addLink.js"></script>
+<script src="main.js"></script>
+<script src="checkuser.js" charset="utf-8"></script>

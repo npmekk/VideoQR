@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="https://fonts.googleapis.com/css?family=Raleway:100,300,400,500,700,900" rel="stylesheet">
+	<script src="https://www.gstatic.com/firebasejs/7.4.0/firebase.js"></script>
+    <title>User Management</title>
+    <footer style="width: auto; height: 145px;"></footer> 
+    
+        
+        <!-- Additional CSS Files -->
+        <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
+    
+        <link rel="stylesheet" type="text/css" href="assets/css/font-awesome.css">
+    
+        <link rel="stylesheet" href="assets/css/templatemo-softy-pinko.css">
+	
+		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+		
+        </head>
+        
+        <body style="font-family: Didot, serif;">
+        
+        <!-- ***** Preloader Start ***** -->
+        <div id="preloader">
+            <div class="jumper">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>  
+        <!-- ***** Preloader End ***** -->
+        
+        
+        <!-- ***** Header Area Start ***** -->
+        <header class="header-area header-sticky">
+            <div class="container" style="margin: center;">
+                <div class="row" style="width: 1300px;">
+                    <div class="col-12">
+                        <nav class="main-nav" style="margin: auto;">
+							<!-- ***** Logo Start ***** -->
+							<a href="home.html" class="logo">
+								<img src="assets/images/logo.png" alt="TinyEpicBrains logo" width="140" height="35" />
+							</a>
+							<!-- ***** Logo End ***** -->
+							<!-- ***** Menu Start ***** -->
+							<ul class="nav">
+                                    <li><a id="navUser" href="listuser.html" class="active" style="display:none;padding:0;">User Management</a></li>
+									<li><a id="navEmbed" href="embed.html" style="display:none; padding:0;">Embed Links</a></li>
+									<li><a id="navVideo" href="listfile.html" style="display:none; padding:0;">Video Information</a></li>
+									<li><a id="navGenqr" href="shortURL.html" style="padding:0;">Generate QR Code</a></li>
+								<button id="signOutBtn" class="btn danger">Logout</button>
+							</ul>
+							<a class='menu-trigger'>
+								<span>Menu</span>
+							</a>
+							<!-- ***** Menu End ***** -->
+						</nav>
+					</div>
+				</div>
+			</div>
+		</header>
+    
+        <!-- ***** Header Area End ***** -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">  
+      <!-- Optional theme -->
+  
+      <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	<div class="wel-area" id="welcome">
+      <h2 style="text-align: center;margin-top: 50px; font-size: 40px;">User Management</h2>
+	  
+    	<div class="container">
+        	<div class="row">
+            	<div class="col-12">
+                	<!-- <button onclick="refreshEntityList();change();" id="click1" value="Click to view Video Information" class="main-button btn btn-block">Click to view User Information</button> -->
+                	<div id="result" style = "margin: auto;"></div>
+            	</div>
+        	</div>
+    	</div>
+	</div>
+    
+
+<script src="azure-storage.table.js" charset="utf-8"></script>
+
+
+<script>
+	var account = "tinylogtable";
+	var sas = '?sv=2020-02-10&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-06-25T20:34:09Z&st=2021-04-26T12:34:09Z&spr=https&sig=Uo60BucTjM1ppcvyz6cIvGWvmiQc1HQA%2FDc2cMlWmzg%3D';
+	var table = 'userinfo';
+	var tableUri = '';
+	
+	var userRole
+
+	function checkParameters() {
+
+		if (account == null || account.length < 1)
+		{
+			alert('Please enter a valid storage account name!');
+			return false;
+		}
+		if (sas == null || sas.length < 1)
+		{
+			alert('Please enter a valid SAS Token!');
+			return false;
+		}
+		return true;
+	}
+
+	function getTableService() {
+		
+		if (!checkParameters())
+			return null;
+
+		tableUri = 'https://' + account + '.table.core.windows.net';
+		var tableService = AzureStorage.Table.createTableServiceWithSas(tableUri, sas).withFilter(new AzureStorage.Table.ExponentialRetryPolicyFilter());
+		return tableService;
+	}
+
+	function refreshEntityList() {
+		var tableService = getTableService();
+		if (!tableService)
+			return;
+
+		if (table == null || table.length < 1) {
+			alert('Please select a table from table list!')
+			return;
+		}
+
+		var tableQuery = new AzureStorage.Table.TableQuery().where('Company eq ?', 'KMITL');
+		tableService.queryEntities(table, tableQuery, null , function(error, results) {
+			if (error) {
+				alert('List table entities error, please open browser console to view detailed error');
+				console.log(error);
+			} 
+			else {
+				var output = [];
+				output.push('<thead><tr>',
+								
+								'<th>Display Name</th>',
+								'<th>Email</th>',
+								'<th>Company</th>',
+								'<th>Role</th>',
+								'<th>Edit</th>',
+								
+							'</tr></thead>');
+				if (results.entries.length < 1) {
+					output.push('<tr><td>Empty results...</td></tr>');
+				}
+				for (var i = 0, entity; entity = results.entries[i]; i++) {
+					var DisplayName = '';
+					var Email = '';
+					var Company = '';
+					var Roleid = '';
+					var Rowkey = entity.RowKey._;
+					var selected0 = '';
+					var selected1 = '';
+					var selected2 = '';
+					
+					if (typeof entity.DisplayName !== 'undefined') {
+						DisplayName = entity.DisplayName._;	
+					}
+					if (typeof entity.Email !== 'undefined') {
+						Email = entity.Email._;  
+					}
+					if (typeof entity.Company !== 'undefined') {
+						Company = entity.Company._;  
+					}
+					
+					if (typeof entity.Roleid!== 'undefined') {
+						Roleid = entity.Roleid._;
+						
+						if (Roleid == "ROLE00") {
+							//Admin UI
+							userRole = "Admin";
+							selected0 = "selected";
+							
+						}
+						else if (Roleid == "ROLE01") {
+							//Free User Interface
+							userRole = "Free User";
+							selected2 = "selected";
+						}
+						else {
+							//Paid User Interface
+							userRole = "Paid User";
+							selected1 = "selected";
+						}
+						
+					}
+					output.push('<tr>',
+									
+									'<td id="name',i,'" data-value="',DisplayName,'">', DisplayName, '</td>',
+									'<td id="email',i,'" data-value="',Rowkey,'">', Email, '</td>',
+									'<td>',Company,'</td>',
+									'<td>',userRole,'</td>',
+									'<td>',
+										'<button type="button" data-toggle="modal" data-target="#ModalData',i,'" class="btn btn-success">edit</button>',
+										
+												
+												
+									'</td>',
+									
+								'</tr>',
+								
+										'<div id="ModalData',i,'" class="modal fade">',
+											'<div class="modal-dialog">',
+												'<div class="modal-content">',
+													'<div class="modal-header">',
+														'<h4 class="modal-title">Update User</h4>',
+													'</div>',
+													'<div class="modal-body">',
+														'<p class="lead text-xs-center">Updating ',DisplayName,'</p>',
+															'  <div class="form-group">',
+																	'<label for="exampleInputEmail1">Displayname</label>',
+																	'<input type="text" id="name',i,'" class="form-control" value="',DisplayName,'">',
+																'</div>',
+																'<div class="form-group">',
+																	'<label for="exampleFormControlSelect1">Update Role</label>',
+																	'<select  class="form-control" id="role',i,'">',
+																		'<option ',selected0,' value="a">Admin</option>',
+																		'<option ',selected1,' value="p">Paid User</option>',
+																		'<option ',selected2,' value="f">Free User</option>',
+																	'</select>',
+																  
+															'</div>',
+															  
+															'<button type="button" onclick="update_user(',i,')" class="btn btn-primary btn-block">Submit</button>',
+															'<button type="button" onclick="delete_user(',i,')" class="btn btn-danger btn-block">DELETE USER</button>',
+														
+													'</div>',
+												'</div>',
+											'</div>',
+										'</div>'
+								
+								);
+				}
+			
+				//To print result of table
+				document.getElementById('result').innerHTML = '<table id="myTable" class="table table-bordered table-condensed display">' + output.join('') + '</table>';
+				$("#myTable").DataTable();	
+			}
+		   });
+	}
+	refreshEntityList();
+	
+	function update_user(i)
+	{
+		var displayname = document.getElementById("name"+i).value;
+		var role = document.getElementById("role"+i).value;
+		var rowkey = document.getElementById("email"+i).getAttribute('data-value');
+		
+		if(confirm('Do you want to update '+displayname+' ?'))
+		{	
+			
+			update_user_to_db(rowkey,role,displayname);
+			
+		}
+		else
+		{
+			return false;
+		}
+	
+	}
+	function delete_user(i)
+	{
+		var displayname = document.getElementById("name"+i).value;
+		var rowkey = document.getElementById("email"+i).getAttribute('data-value');
+		
+		if(confirm('Do you want to delete '+displayname+' ?'))
+		{	
+			
+			delete_user_to_db(rowkey);
+			
+		}
+		else
+		{
+			return false;
+		}
+	
+	}
+	
+	function delete_user_to_db(rowkey)
+	{
+		var tableService = getTableService();
+        if (!tableService)
+            return;
+            var deleteTask = {
+				PartitionKey: {'_': 'UserInfo'},
+                RowKey: {'_': rowkey}
+                    
+            };
+            
+            tableService.deleteEntity(table, deleteTask, function(error, result, response){
+                if(error) {
+                    alert('Delete Information Error');
+                    console.log(error);
+                } else {
+                    alert('User Deleted');
+                    console.log(result);
+                    console.log(response);
+					location.reload();
+                    
+                }
+              });
+	
+	
+	
+	}
+	
+	
+	
+	function update_user_to_db(rowkey,role,displayname)
+	{
+		switch(role){
+			case 'a':
+				role = "ROLE00";
+				break;
+			case 'p':
+				role = "ROLE02";
+				break;
+			case 'f':
+				role = "ROLE01";
+				break;
+		}
+		var tableService = getTableService();
+        if (!tableService)
+            return;
+
+        
+
+            var updatedTask = {
+				PartitionKey: {'_': 'UserInfo'},
+                RowKey: {'_': rowkey},
+				Roleid: {'_': role},
+				DisplayName: {'_': displayname}
+                    
+            };
+            
+            tableService.mergeEntity(table, updatedTask, function(error, result, response){
+                if(error) {
+                    alert('Insert Information Error');
+                    console.log(error);
+                } else {
+                    alert('User Updated');
+                    console.log(result);
+                    console.log(response);
+					location.reload();
+                    
+                }
+              });
+	}
+	
+</script>
+
+ <!-- jQuery -->
+ <script src="assets/js/jquery-2.1.0.min.js"></script>
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+ <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+
+ <!-- Bootstrap -->
+ <script src="assets/js/popper.js"></script>
+ <script src="assets/js/bootstrap.min.js"></script>
+
+ <!-- Plugins -->
+ <script src="assets/js/scrollreveal.min.js"></script>
+ <script src="assets/js/waypoints.min.js"></script>
+ <script src="assets/js/jquery.counterup.min.js"></script>
+ <script src="assets/js/imgfix.min.js"></script> 
+ 
+ <!-- Global Init -->
+ <script src="assets/js/custom.js"></script>
+ <script src="assets/css/templatemo-softy-pinko.css"></script>
+ <script src="firebaseconfig.js" charset="utf-8"></script>
+ <script src="checkuser.js" charset="utf-8"></script>
+</body>
+</html>

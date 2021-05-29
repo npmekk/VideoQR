@@ -1,0 +1,132 @@
+.drop-zone-position{
+    position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+    }
+
+
+.drop-zone {
+    margin: auto;
+    margin-top:100px;
+    width:50%;
+    max-width: 1024px;
+    height: 600px;
+    padding: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: "Quicksand", sans-serif;
+    font-weight: 500;
+    font-size: 35px;
+    cursor: pointer;
+    color: #9e9e9e;
+    background-color: #FFF;
+    border: 4px dashed #8c52ff;
+    border-radius: 10px;
+  }
+  
+  .drop-zone--over {
+    border-style: solid;
+  }
+  
+  .drop-zone__input {
+    display: none;
+  }
+  
+  .drop-zone__thumb {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #cccccc;
+    background-size: cover;
+    position: relative;
+  }
+  
+  .drop-zone__thumb::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 5px 0;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.75);
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .gbutton {
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 45px;
+    max-width: 160px;
+    position: relative;
+    text-decoration: none;
+    text-transform: uppercase;
+    width: 100%;
+  }
+  .gbutton:hover {
+    text-decoration: none;
+  }
+
+  /*gbutton_background*/
+  .effect01 {
+    color: rgb(53, 53, 53);
+    border: 2px solid rgb(70, 70, 70);
+    box-shadow:0px 0px 0px 1px rgb(70, 70, 70) inset;
+    background-color: #fff;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s ease-in-out;
+    border-radius: 16px;
+  }
+  .effect01:hover {
+    border: 2px solid #666;
+    background-color: #41dd5b;
+    box-shadow:0px 0px 0px 4px #474747 inset;
+    letter-spacing: 0.13em;
+    color: #FFF;
+  }
+  .effect01:after {
+  background: #FFF;
+  border: 0px solid #000;
+  content: "";
+  height: 155px;
+  left: -75px;
+  opacity: .8;
+  position: absolute;
+  top: -50px;
+  width: 50px;
+  z-index: 1;
+}
+
+  .input1 {
+      display: block;
+      width: 100%;
+      background: #e6e6e6;
+      font-family: Montserrat-Bold;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #666;
+  }
+  input{
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
+     border-radius: 20px;
+     border: 1px solid #000;
+     color: #000;
+     
+     height: 30px;
+     padding-left: 10px;
+    }
+    
+  input:focus {
+     outline: none;
+     border: 1px solid #8c52ff;
+     color: #000;
+  }

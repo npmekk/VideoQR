@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="https://fonts.googleapis.com/css?family=Raleway:100,300,400,500,700,900" rel="stylesheet">
+	<script src="https://www.gstatic.com/firebasejs/7.4.0/firebase.js"></script>
+	<script src="azure-storage.table.js" charset="utf-8"></script>
+    <script src="firebaseconfig.js" charset="utf-8"></script>
+	
+    <title>Your lists</title>
+    <footer style="width: auto; height: 145px;"></footer> 
+    
+        
+        <!-- Additional CSS Files -->
+        <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
+    
+        <link rel="stylesheet" type="text/css" href="assets/css/font-awesome.css">
+    
+        <link rel="stylesheet" href="assets/css/templatemo-softy-pinko.css">
+		
+		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+    
+        </head>
+        
+        <body style="font-family: Didot, serif;">
+        
+        <!-- ***** Preloader Start ***** -->
+        <div id="preloader">
+            <div class="jumper">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>  
+        <!-- ***** Preloader End ***** -->
+        
+        
+            <!-- ***** Header Area Start ***** -->
+            <header class="header-area header-sticky">
+                <div class="container" style="margin: center;">
+                    <div class="row" style="width: 1300px;">
+                        <div class="col-12">
+                            <nav class="main-nav" style="margin: auto;">
+                                <!-- ***** Logo Start ***** -->
+                                <a href="home.html" class="logo">
+								    <img src="assets/images/logo.png" alt="TinyEpicBrains logo" width="140" height="35" />
+							    </a>
+                                <!-- ***** Logo End ***** -->
+                                <!-- ***** Menu Start ***** -->
+                                <ul class="nav">
+                                    <li><a id="navUser" href="listuser.html" style="display:none;padding:0;">User Management</a></li>
+									<li><a id="navEmbed" href="embed.html" style="display:none; padding:0;">Embed Links</a></li>
+									<li><a  id="navVideo"href="listfile.html" class="active" style="display:none; padding:0;">Video Information</a></li>
+									<li><a  id="navGenqr"href="shortURL.html" style="padding:0;">Generate QR Code</a></li>
+									<button id="signOutBtn" class="btn danger">Logout</button>
+                                </ul>
+                                <a class='menu-trigger'>
+                                    <span>Menu</span>
+                                </a>
+                                <!-- ***** Menu End ***** -->
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </header>
+        
+        <!-- ***** Header Area End ***** -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">  
+      <!-- Optional theme -->
+  
+      <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      
+      
+    <div class="wel-area" id="welcome"> 
+      <h2 style="text-align: center;margin-top: 50px; font-size: 40px;">Video Information</h2>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div id="result" style = "margin: auto;"></div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    
+<script>
+    var account = "tinylogtable";
+    var sas = '?sv=2020-02-10&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-06-25T20:34:09Z&st=2021-04-26T12:34:09Z&spr=https&sig=Uo60BucTjM1ppcvyz6cIvGWvmiQc1HQA%2FDc2cMlWmzg%3D';
+    var table = 'videoinfo';
+    var tableUri = '';
+	
+    function checkParameters() {
+        if (account == null || account.length < 1)
+        {
+            alert('Please enter a valid storage account name!');
+            return false;
+        }
+        if (sas == null || sas.length < 1)
+        {
+            alert('Please enter a valid SAS Token!');
+            return false;
+        }
+
+        return true;
+    }
+
+    function getTableService() {
+        if (!checkParameters())
+            return null;
+
+        tableUri = 'https://' + account + '.table.core.windows.net';
+        var tableService = AzureStorage.Table.createTableServiceWithSas(tableUri, sas).withFilter(new AzureStorage.Table.ExponentialRetryPolicyFilter());
+        return tableService;
+    }
+
+    function queryVideos() {
+        var tableService = getTableService();
+        if (!tableService)
+            return;
+
+        if (table == null || table.length < 1) {
+            alert('Please select a table from table list!')
+            return;
+        }
+
+
+
+        document.getElementById('result').innerHTML = 'Loading video information...';
+        var tableQuery = new AzureStorage.Table.TableQuery().where('Userid eq ?', 'cpp6z10cavht5PDMzzGkeJdtJaB2');
+        tableService.queryEntities(table, tableQuery, null, function(error, results) {
+            if (error) {
+                alert('List table entities error, please open browser console to view detailed error');
+                console.log(error);
+            } else {
+                var output = [];
+                output.push('<thead><tr>',
+                               
+                                '<th>Project Name</th>',
+                                '<th>Links count</th>',
+                                '<th>Last modefied</th>',
+                                
+                                '<th>Status</th>',
+                                '<th>Edit</th>',
+                                
+                            '</tr></thead>');
+                if (results.entries.length < 1) {
+                    output.push('<tr><td>Empty results...</td></tr>');
+                }
+                for (var i = 0, entity; entity = results.entries[i]; i++) {
+                    var RedirectUrl = '';
+                    var RedirectTime = '';
+                    var VideoName = '';
+                    var Redirect_Count = '';
+                    var FileName = '';
+                    var FileStatus = '';
+                    //console.log(entity.FileNameOri._);
+                    if (typeof entity.RedirectUrl !== 'undefined') {
+                        RedirectUrl = entity.RedirectUrl._;
+                    }
+
+                    if (typeof entity.VideoName !== 'undefined') {
+                        VideoName = entity.VideoName._;
+                    }
+
+                    if (typeof entity.Redirect_Count !== 'undefined') {
+                        Redirect_Count = entity.Redirect_Count._;
+                    }
+
+                    if (typeof entity.RedirectTime!== 'undefined') {
+                        RedirectTime = entity.RedirectTime._;
+                    }
+                   
+                    if (typeof entity.FileNameOri !== 'undefined') {
+                        FileName = entity.FileNameOri._;
+                        
+                    }
+                    if (typeof entity.FileStatus !== 'undefined') {
+                        FileStatus = entity.FileStatus._;
+                        if(FileStatus == "complete")
+                        {
+                            FileStatus = "<a href='"+entity.FileItemUri._+"'><button type='button' class='btn btn-success'>Download</button></a>";
+                        }
+                        
+                    }
+                    if (typeof entity.RowKey !== 'undefined') {
+                     
+                        RowKey = "<a href='editvideo.html?vid="+entity.RowKey._+"'><button type='button' class='btn btn-success'>edit</button></a>";   
+                        
+                    }
+                    output.push('<tr>',
+                                    
+                                    
+                                    '<td>', VideoName, '</td>',
+                                    '<td>', Redirect_Count, '</td>',
+                                    '<td>', entity.Timestamp._, '</td>',
+                                    '<td>', FileStatus, '</td>',
+                                    '<td>', RowKey, '</td>',
+                                    
+                                '</tr>');
+                }
+                document.getElementById('result').innerHTML = '<table id="myTable" class="table table-bordered table-condensed display">' + output.join('') + '</table>';
+				$("#myTable").DataTable();
+            }
+        });
+    }
+	queryVideos();
+
+
+</script>
+ <!-- jQuery -->
+ <script src="assets/js/jquery-2.1.0.min.js"></script>
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+ <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+
+ <!-- Bootstrap -->
+ <script src="assets/js/popper.js"></script>
+ <script src="assets/js/bootstrap.min.js"></script>
+
+ <!-- Plugins -->
+ <script src="assets/js/scrollreveal.min.js"></script>
+ <script src="assets/js/waypoints.min.js"></script>
+ <script src="assets/js/jquery.counterup.min.js"></script>
+ <script src="assets/js/imgfix.min.js"></script> 
+ 
+ <!-- Global Init -->
+ <script src="assets/js/custom.js"></script>
+ <script src="assets/css/templatemo-softy-pinko.css"></script>
+ <script src="checkuser.js" charset="utf-8"></script>
+</body>
+</html>
