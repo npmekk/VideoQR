@@ -12,7 +12,7 @@ firebase.auth().onAuthStateChanged(function(user) {
     if (user) {
         // signed in
         displayName = user.displayName;
-		console.log("Name:" + displayName);
+		console.log("Name: " + displayName);
         email = user.email;
         uid = user.uid;
         
@@ -83,6 +83,7 @@ function checkRole() {
                         '</tr>');
             if (results.entries.length < 1) {
                 output.push('<tr><td>Empty results...</td></tr>');
+				addNewUser();
             }
             for (var i = 0, entity; entity = results.entries[i]; i++) {
                 var Email = '';
@@ -108,24 +109,30 @@ function checkRole() {
                         //Free User Interface
                         userRole = "Free User";
                     }
-                    else {
+                    else if (Roleid == "ROLE02") {
                         //Paid User Interface
                         userRole = "Paid User";
                         document.getElementById("navEmbed").style.display = "block";
 		                document.getElementById("navVideo").style.display = "block";
                     }
+					else {
+						userRole = "Super Admin"
+						document.getElementById("navUser").style.display = "block";
+		                document.getElementById("navEmbed").style.display = "block";
+		                document.getElementById("navVideo").style.display = "block";
+					}
                     console.log("User Role: " + userRole);
                 }
 				
 				if (typeof entity.Company!== 'undefined') {
                     Company = entity.Company._;
-					console.log("Company Name:" + Company);
+					console.log("Company Name: " + Company);
 				}
 				
                 if (typeof entity.Userid !== 'undefined') {
                     Userid = entity.Userid._;
                     azureuid = Userid;
-					console.log("User id:" + azureuid);
+					console.log("User id: " + azureuid);
                 }
                 output.push('<tr>',
                                 
@@ -139,4 +146,33 @@ function checkRole() {
 
         }
     });
+}
+
+function addNewUser(x) {
+	var tableService = getTableService();
+                if (!tableService)
+                    return;
+
+                if (usertable == null || usertable.length < 1) {
+                    alert('Invalid table name!')
+                    return;
+                }
+				var insertEntity = {
+                            PartitionKey: {'_': 'UserInfo'},
+                            RowKey: {'_': uid},
+                            Company: {'_': "none"},
+                            DisplayName: {'_': displayName},
+                            Email: {'_': email},
+                            Roleid: {'_': 'ROLE01'},
+                            Userid: {'_': uid}
+
+                    };
+                    
+                    tableService.insertEntity(usertable, insertEntity, function(error, result, response) {
+
+                        if(error) {
+                            alert('Insert Information Error');
+                            console.log(error);
+                        } 
+                    });
 }
