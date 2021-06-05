@@ -50,8 +50,8 @@
 							<!-- ***** Logo End ***** -->
 							<!-- ***** Menu Start ***** -->
 							<ul class="nav">
-									<li><a id="navComp" href="listcompany.html" style="display:none;padding:0;">Company Management</a></li>
-                                    <li><a id="navUser" href="listuser.html" class="active" style="display:none;padding:0;">User Management</a></li>
+                                    <li><a id="navComp" href="listcompany.html" class="active" style="display:none;padding:0;">Company Management</a></li>
+                                    <li><a id="navUser" href="listuser.html" style="display:none;padding:0;">User Management</a></li>
 									<li><a id="navEmbed" href="embed.html" style="display:none; padding:0;">Embed Links</a></li>
 									<li><a id="navVideo" href="listfile.html" style="display:none; padding:0;">Video Information</a></li>
 									<li><a id="navGenqr" href="shortURL.html" style="padding:0;">Generate QR Code</a></li>
@@ -73,14 +73,14 @@
   
       <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 	<div class="wel-area" id="welcome">
-      <h2 style="text-align: center;margin-top: 50px; font-size: 40px;">User Management</h2>
+      <h2 style="text-align: center;margin-top: 50px; font-size: 40px;">Company Management</h2>
 	  
     	<div class="container">
         	<div class="row">
             	<div class="col-12">
                 	<!-- <button onclick="refreshEntityList();change();" id="click1" value="Click to view Video Information" class="main-button btn btn-block">Click to view User Information</button> -->
                 	<div id="result" style = "margin: auto;"></div>
-					<button type="button" onclick="get_company_code()" data-toggle="modal" data-target="#companycode" class="btn btn-success btn-block">Show Company code</button>
+					<button type="button"  data-toggle="modal" data-target="#companycode" class="btn btn-success btn-block">Create new company</button>
             	</div>
         	</div>
     	</div>
@@ -90,12 +90,14 @@
 		<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h4 class="modal-title">Companycode</h4>
+					<h4 class="modal-title">Create New Company</h4>
 				</div>
 				<div class="modal-body">
-					<p class="lead text-xs-center">Your company code is</p>
+					<p class="lead text-xs-center">Create New Company</p>
 						<div class="form-group">
-							<label id="showcompanycode" for="exampleInputEmail1">Displayname</label>
+							<label id="showcompanycode" for="exampleInputEmail1">Enter company name</label>
+                            <input type="text" id="companyname" class="form-control">
+                            <button type="button" onclick="create_company();" class="btn btn-success btn-block">Submit</button>
 						</div>
 						
 					
@@ -227,7 +229,7 @@
 						document.getElementById("navUser").style.display = "block";
 		                document.getElementById("navEmbed").style.display = "block";
 		                document.getElementById("navVideo").style.display = "block";
-						listUsers(userRole, company);
+						list_company();
                     }
                     else if (Roleid == "ROLE01") {
                         //Free User Interface
@@ -241,11 +243,11 @@
                     }
 					else {
 						userRole = "Super Admin"
-						document.getElementById("navComp").style.display = "block";
+                        document.getElementById("navComp").style.display = "block";
 						document.getElementById("navUser").style.display = "block";
 		                document.getElementById("navEmbed").style.display = "block";
 		                document.getElementById("navVideo").style.display = "block";
-						listUsers(userRole);
+						list_company();
 					}
                     console.log("User Role: " + userRole);
                 }
@@ -263,22 +265,20 @@
     });
 }
 
-	function listUsers(role, company) {
+	function list_company() {
 		var tableService = getTableService();
+        var companyinfo = 'companyinfo';
 		if (!tableService)
 			return;
 
-		if (table == null || table.length < 1) {
+		if (companyinfo == null || companyinfo.length < 1) {
 			alert('Please select a table from table list!')
 			return;
 		}
-		if (role == 'Admin'){
-			var tableQuery = new AzureStorage.Table.TableQuery().where('Company eq ?', company);
-		}
-		else{
-			var tableQuery = new AzureStorage.Table.TableQuery();
-		}
-		tableService.queryEntities(table, tableQuery, null , function(error, results) {
+		
+        var tableQuery = new AzureStorage.Table.TableQuery();
+		
+		tableService.queryEntities(companyinfo, tableQuery, null , function(error, results) {
 			if (error) {
 				alert('List table entities error, please open browser console to view detailed error');
 				console.log(error);
@@ -287,104 +287,33 @@
 				var output1 = [];
 				output1.push('<thead><tr>',
 								
-								'<th>Display Name</th>',
-								'<th>Email</th>',
-								'<th>Company</th>',
-								'<th>Role</th>',
-								'<th>Edit</th>',
+								'<th>Company Name</th>',
+								'<th>Code</th>',
 								
 							'</tr></thead>');
 				if (results.entries.length < 1) {
 					output.push('<tr><td>Empty results...</td></tr>');
 				}
 				for (var i = 0, entity; entity = results.entries[i]; i++) {
-					var DisplayName = '';
-					var Email = '';
-					var Company = '';
-					var Roleid = '';
-					var Rowkey = entity.RowKey._;
-					var selected0 = '';
-					var selected1 = '';
-					var selected2 = '';
+					var companyname = '';
+					var code = '';
 					
-					if (typeof entity.DisplayName !== 'undefined') {
-						DisplayName = entity.DisplayName._;	
-					}
-					if (typeof entity.Email !== 'undefined') {
-						Email = entity.Email._;  
-					}
-					if (typeof entity.Company !== 'undefined') {
-						Company = entity.Company._;  
-					}
 					
-					if (typeof entity.Roleid!== 'undefined') {
-						Roleid = entity.Roleid._;
-						
-						if (Roleid == "ROLE00") {
-							//Admin UI
-							userRole = "Admin";
-							selected0 = "selected";
+					if (typeof entity.RowKey!== 'undefined') {
+						companyname = entity.RowKey._;
 							
-						}
-						else if (Roleid == "ROLE01") {
-							//Free User Interface
-							userRole = "Free User";
-							selected2 = "selected";
-						}
-						else {
-							//Paid User Interface
-							userRole = "Paid User";
-							selected1 = "selected";
-						}
-						
+					}
+                    if (typeof entity.Code!== 'undefined') {
+						code = entity.Code._;
+							
 					}
 					output1.push('<tr>',
 									
-									'<td id="name',i,'" data-value="',DisplayName,'">', DisplayName, '</td>',
-									'<td id="email',i,'" data-value="',Rowkey,'">', Email, '</td>',
-									'<td id="comp',i,'" data-value="',Company,'">',Company,'</td>',
-									'<td>',userRole,'</td>',
-									'<td>',
-										'<button type="button" data-toggle="modal" data-target="#ModalData',i,'" class="btn btn-success">edit</button>',
-										
-												
-												
-									'</td>',
+									'<td id="name',i,'">', companyname, '</td>',
+									'<td id="email',i,'">', code, '</td>',
 									
-								'</tr>',
-								
-										'<div id="ModalData',i,'" class="modal fade">',
-											'<div class="modal-dialog">',
-												'<div class="modal-content">',
-													'<div class="modal-header">',
-														'<h4 class="modal-title">Update User</h4>',
-													'</div>',
-													'<div class="modal-body">',
-														'<p class="lead text-xs-center">Updating ',DisplayName,'</p>',
-															'<div class="form-group">',
-																'<label for="exampleInputEmail1">Displayname</label>',
-																'<input type="text" id="name',i,'" class="form-control" value="',DisplayName,'">',
-															'</div>',
-															'<div class="form-group">',
-																'<label for="exampleFormControlSelect1">Update Role</label>',
-																'<select  class="form-control" id="role',i,'">',
-																		'<option ',selected0,' value="a">Admin</option>',
-																		'<option ',selected1,' value="p">Paid User</option>',
-																		'<option ',selected2,' value="f">Free User</option>',
-																'</select>',	  
-															'</div>',
-															'<div class="sup" style="display:none" class="form-group">',
-																'<label for="exampleInputEmail1">Company</label>',
-																'<input type="text" id="comp',i,'" class="form-control" value="',Company,'">',
-															'</div>',
-															'<button type="button" onclick="update_user(',i,')" class="btn btn-success btn-block">Submit</button>',
-															'<button class="admin btn btn-primary btn-block" style="display:none" type="button" onclick="remove_user(',i,')">Remove from company</button>',
-															'<button class="sup btn btn-danger btn-block" style="display:none" type="button" onclick="delete_user(',i,')">DELETE</button>',
-														
-													'</div>',
-												'</div>',
-											'</div>',
-										'</div>'
+									
+								'</tr>'
 								
 								);
 								
@@ -393,201 +322,52 @@
 				//To print result of table
 				document.getElementById('result').innerHTML = '<table id="myTable" class="table table-bordered table-condensed display">' + output1.join('') + '</table>';
 				$("#myTable").DataTable();
-				if (role == 'Admin'){
-					var elements = document.getElementsByClassName('admin');
-					for(var i=0; i<elements.length; i++) { 
-						elements[i].style.display='block';
-					}
-				}
-				else{
-					var elements = document.getElementsByClassName('sup');
-					for(var i=0; i<elements.length; i++) { 
-						elements[i].style.display='block';
-					}
-				}
+				
 			}
 		   });
 	}
 	
-	
-	function update_user(i)
-	{
-		var displayname = document.getElementById("name"+i).value;
-		var role = document.getElementById("role"+i).value;
-		var company = document.getElementById("comp"+i).value;
-		var rowkey = document.getElementById("email"+i).getAttribute('data-value');
-		
-		if(confirm('Do you want to update '+displayname+' ?'))
-		{	
-			
-			update_user_to_db(rowkey,role,displayname,comp);
-			
-		}
-		else
-		{
-			return false;
-		}
-	
-	}
-	function remove_user(i)
-	{
-		var displayname = document.getElementById("name"+i).value;
-		var company = document.getElementById("comp"+i).value;
-		var rowkey = document.getElementById("email"+i).getAttribute('data-value');
-		
-		if(confirm('Remove '+displayname+' from '+company+' ?'))
-		{	
-			
-			delete_from_comp(rowkey); //delete from company
-			
-		}
-		else
-		{
-			return false;
-		}
-	
-	}
-	
-	function delete_user(i)
-	{
-		var displayname = document.getElementById("name"+i).value;
-		var rowkey = document.getElementById("email"+i).getAttribute('data-value');
-		
-		if(confirm('Do you want to delete '+displayname+' ?'))
-		{	
-			
-			delete_to_db(rowkey); //delete from company
-			
-		}
-		else
-		{
-			return false;
-		}
-	
-	}
-	
-	function delete_from_comp(rowkey)
-	{
-		var tableService = getTableService();
-        if (!tableService)
-            return;
-            var updateTask = {
-				PartitionKey: {'_': 'UserInfo'},
-                RowKey: {'_': rowkey},
-                Company: {'_': 'none'}    
-            };
-            
-            tableService.mergeEntity(table, updateTask, function(error, result, response){
-                if(error) {
-                    alert('Delete Information Error');
-                    console.log(error);
-                } else {
-                    alert('User Removed');
-                    console.log(result);
-                    console.log(response);
-					location.reload();
-                    
-                }
-              });
-	}
-	function delete_to_db(rowkey)
-	{
-		var tableService = getTableService();
-        if (!tableService)
-            return;
-            var deleteTask = {
-				PartitionKey: {'_': 'UserInfo'},
-                RowKey: {'_': rowkey}, 
-            };
-            
-            tableService.deleteEntity(table, deleteTask, function(error, result, response){
-                if(error) {
-                    alert('Delete Information Error');
-                    console.log(error);
-                } else {
-                    alert('User Deleted');
-                    console.log(result);
-                    console.log(response);
-					location.reload();
-                    
-                }
-              });
-	}
-	
-	function get_company_code()
+function create_company()
 {
-    var companyinfo = "companyinfo";
     var tableService = getTableService();
-    if (!tableService)
-        return;
-
-    if (companyinfo == null || companyinfo.length < 1) {
-        alert('Please select a table from table list!')
-        return;
+    var companyinfo = 'companyinfo';
+    var comp_name = document.getElementById("companyname").value;
+    if(!comp_name)
+    {
+        alert("Please enter company name");
+        return false;
     }
-    var companyinfoQuery = new AzureStorage.Table.TableQuery().where('RowKey eq ?', company);
-    tableService.queryEntities(companyinfo, companyinfoQuery, null , function(error, results) {
-        if (error) {
-            alert('List table entities error, please open browser console to view detailed error');
-            console.log(error);
-        } 
-        else {
-            if (results.entries.length < 1) {
-				document.getElementById("showcompanycode").innerHTML = "No company found or does not exist";
+    else
+    {
+        function convertLetterToNumber(str) {
+            var out = 0, len = str.length;
+            for (pos = 0; pos < len; pos++) {
+                out += (str.charCodeAt(pos) - 64) * Math.pow(26, len - pos - 1);
             }
-            else
-            {
-                entity = results.entries[0];
-                document.getElementById("showcompanycode").innerHTML = entity.Code._;
-
-            }
+            return out;
         }
-
-    });
-    
+        var randPassword = Array(10).fill("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz").map(function(x) { return x[Math.floor(Math.random() * x.length)] }).join('');
+        code = randPassword;
+        var insertEntity2 = {
+                            PartitionKey: {'_': 'CompanyInfo'},
+                            RowKey: {'_': comp_name},
+                            Code: {'_': code}
+                                
+                    };
+                    tableService.insertEntity(companyinfo, insertEntity2, function(error, result, response) {
+                        if(error) {
+                            alert('Insert Information Error');
+                            console.log(error);
+                        } else {
+                            alert('Add company successfullyyyyy ')
+                        }
+                    });
+    }
 }
 	
-	function update_user_to_db(rowkey,role,displayname,comp)
-	{
-		switch(role){
-			case 'a':
-				role = "ROLE00";
-				break;
-			case 'p':
-				role = "ROLE02";
-				break;
-			case 'f':
-				role = "ROLE01";
-				break;
-		}
-		var tableService = getTableService();
-        if (!tableService)
-            return;
 
-        
-
-            var updatedTask = {
-				PartitionKey: {'_': 'UserInfo'},
-                RowKey: {'_': rowkey},
-				Roleid: {'_': role},
-				DisplayName: {'_': displayname},
-				Company: {'_': comp}
-                    
-            };
-            
-            tableService.mergeEntity(table, updatedTask, function(error, result, response){
-                if(error) {
-                    alert('Insert Information Error');
-                    console.log(error);
-                } else {
-                    alert('User Updated');
-                    console.log(result);
-                    console.log(response);
-					location.reload();
-                    
-                }
-              });
-	}
+	
+	
 	
 </script>
 

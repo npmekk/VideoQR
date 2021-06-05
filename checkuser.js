@@ -3,7 +3,6 @@ const auth = firebase.auth();
 var displayName;
 var email;
 var uid;
-var Company;
 
 //Azure Function Variables
 var userRole;
@@ -13,14 +12,14 @@ firebase.auth().onAuthStateChanged(function(user) {
     if (user) {
         // signed in
         displayName = user.displayName;
-		console.log("Name:" + displayName);
+		console.log("Name: " + displayName);
         email = user.email;
         uid = user.uid;
+        
 		checkRole();
 		} else {
         // return to login page 
         window.location.replace("index.html");
-        
   
     }
 });
@@ -56,7 +55,7 @@ function getTableService() {
     var tableService = AzureStorage.Table.createTableServiceWithSas(tableUri, sas).withFilter(new AzureStorage.Table.ExponentialRetryPolicyFilter());
     return tableService;
 }
-
+var Company = '';
 function checkRole() {
     var tableService = getTableService();
     if (!tableService)
@@ -84,11 +83,13 @@ function checkRole() {
                         '</tr>');
             if (results.entries.length < 1) {
                 output.push('<tr><td>Empty results...</td></tr>');
+				addNewUser();
             }
             for (var i = 0, entity; entity = results.entries[i]; i++) {
                 var Email = '';
                 var Roleid = '';
                 var Userid = '';
+				
                 
                 if (typeof entity.Email !== 'undefined') {
                     Email = entity.Email._;  
@@ -108,36 +109,144 @@ function checkRole() {
                         //Free User Interface
                         userRole = "Free User";
                     }
-                    else {
+                    else if (Roleid == "ROLE02") {
                         //Paid User Interface
                         userRole = "Paid User";
                         document.getElementById("navEmbed").style.display = "block";
 		                document.getElementById("navVideo").style.display = "block";
                     }
-                    console.log("User Role in Azure: " + userRole);
+					else {
+						userRole = "Super Admin";
+                        document.getElementById("navComp").style.display = "block";
+						document.getElementById("navUser").style.display = "block";
+		                document.getElementById("navEmbed").style.display = "block";
+		                document.getElementById("navVideo").style.display = "block";
+					}
+                    console.log("User Role: " + userRole);
                 }
-
+				
+				if (typeof entity.Company!== 'undefined') {
+                    Company = entity.Company._;
+					console.log("Company Name: " + Company);
+				}
+				
                 if (typeof entity.Userid !== 'undefined') {
                     Userid = entity.Userid._;
                     azureuid = Userid;
-					console.log("User id:" + azureuid);
+					console.log("User id: " + azureuid);
                 }
-                if (typeof entity.Userid !== 'undefined') {
-                    Company = entity.Company._;
-                    Company = Company;
-					console.log("Company:" + Company);
-                }
-                output.push('<tr>',
-                                
-                                '<td>', Email, '</td>',
-                                '<td>', Roleid, '</td>',
-                                '<td>', Userid, '</td>',
-                                
-                            '</tr>');
+               
             }
-            
 
         }
-        
     });
+}
+
+function addNewUser(x) {
+	var tableService = getTableService();
+    if (!tableService)
+        return;
+
+    if (usertable == null || usertable.length < 1) {
+        alert('Invalid table name!')
+        return;
+    }
+    var insertEntity = {
+                PartitionKey: {'_': 'UserInfo'},
+                RowKey: {'_': uid},
+                Company: {'_': "none"},
+                DisplayName: {'_': displayName},
+                Email: {'_': email},
+                Roleid: {'_': 'ROLE01'},
+                Userid: {'_': uid}
+
+        };
+        
+        tableService.insertEntity(usertable, insertEntity, function(error, result, response) {
+
+            if(error) {
+                alert('Insert Information Error');
+                console.log(error);
+            } 
+        });
+}
+//Check Company Code
+function enterCompCode()
+{
+    var companyinfo = "companyinfo";
+    var tableService = getTableService();
+    if (!tableService)
+        return;
+
+    if (companyinfo == null || companyinfo.length < 1) {
+        alert('Please select a table from table list!')
+        return;
+    }
+    var code = document.getElementById('compcode').value;
+    var companyinfoQuery = new AzureStorage.Table.TableQuery().where('Code eq ?', code);
+    tableService.queryEntities(companyinfo, companyinfoQuery, null , function(error, results) {
+        if (error) {
+            alert('List table entities error, please open browser console to view detailed error');
+            console.log(error);
+        } 
+        else {
+            if (results.entries.length < 1) {
+                alert("Code Incorrect");
+            }
+            else
+            {
+                entity = results.entries[0];
+                var new_Company = entity.RowKey._;
+                var updatedTask = {
+                    PartitionKey: {'_': 'UserInfo'},
+                    RowKey: {'_': azureuid},
+                    Company: {'_': new_Company}
+                        
+                };
+                tableService.mergeEntity(usertable, updatedTask, function(error, result, response){
+                    if(error) {
+                        console.log(error);
+                    } else {
+                        console.log(result);
+                        console.log(response);
+                        
+                    }
+                });
+                alert("Entering "+new_Company);
+
+            }
+        }
+
+    });
+}
+function get_company_code()
+{
+    var companyinfo = "companyinfo";
+    var tableService = getTableService();
+    if (!tableService)
+        return;
+
+    if (companyinfo == null || companyinfo.length < 1) {
+        alert('Please select a table from table list!')
+        return;
+    }
+    var companyinfoQuery = new AzureStorage.Table.TableQuery().where('Rowkey eq ?', Company);
+    tableService.queryEntities(companyinfo, companyinfoQuery, null , function(error, results) {
+        if (error) {
+            alert('List table entities error, please open browser console to view detailed error');
+            console.log(error);
+        } 
+        else {
+            if (results.entries.length < 1) {
+            }
+            else
+            {
+                entity = results.entries[0];
+                document.getElementById("showcompanycode").innerHTML = entity.Code._;
+
+            }
+        }
+
+    });
+    
 }
