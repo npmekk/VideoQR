@@ -89,36 +89,157 @@
 
     
 <script>
-    var account = "tinylogtable";
-    var sas = '?sv=2020-02-10&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-06-25T20:34:09Z&st=2021-04-26T12:34:09Z&spr=https&sig=Uo60BucTjM1ppcvyz6cIvGWvmiQc1HQA%2FDc2cMlWmzg%3D';
-    var table = 'videoinfo';
-    var tableUri = '';
+    const auth = firebase.auth();
+	var displayName;
+	var email;
+	var uid;
+
+	//Azure Function Variables
+	var userRole;
+	var azureuid;
+	var company;
+	document.getElementById('signOutBtn').onclick = () => auth.signOut();
+	firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+        // signed in
+        displayName = user.displayName;
+		console.log("Name:" + displayName);
+        email = user.email;
+        uid = user.uid;
+        
+		checkRole(email);
+
+		} else {
+        // return to login page 
+        window.location.replace("index.html");
+  
+    }
+});
 	
-    function checkParameters() {
-        if (account == null || account.length < 1)
-        {
-            alert('Please enter a valid storage account name!');
-            return false;
-        }
-        if (sas == null || sas.length < 1)
-        {
-            alert('Please enter a valid SAS Token!');
-            return false;
-        }
+	var account = "tinylogtable";
+	var sas = '?sv=2020-02-10&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-06-25T20:34:09Z&st=2021-04-26T12:34:09Z&spr=https&sig=Uo60BucTjM1ppcvyz6cIvGWvmiQc1HQA%2FDc2cMlWmzg%3D';
+	var table = 'userinfo';
+	var usertable = 'userinfo';
+	var tableUri = '';
+	
+	function checkParameters() {
 
-        return true;
+		if (account == null || account.length < 1)
+		{
+			alert('Please enter a valid storage account name!');
+			return false;
+		}
+		if (sas == null || sas.length < 1)
+		{
+			alert('Please enter a valid SAS Token!');
+			return false;
+		}
+		return true;
+	}
+
+	function getTableService() {
+		
+		if (!checkParameters())
+			return null;
+
+		tableUri = 'https://' + account + '.table.core.windows.net';
+		var tableService = AzureStorage.Table.createTableServiceWithSas(tableUri, sas).withFilter(new AzureStorage.Table.ExponentialRetryPolicyFilter());
+		return tableService;
+	}
+	
+	function checkRole(x) {
+    var tableService = getTableService();
+    if (!tableService)
+        return;
+
+    if (usertable == null || usertable.length < 1) {
+        alert('Please select a table from table list!')
+        return;
     }
 
-    function getTableService() {
-        if (!checkParameters())
-            return null;
+    var usertableQuery = new AzureStorage.Table.TableQuery().where('Email eq ?', x);
+    tableService.queryEntities(usertable, usertableQuery, null , function(error, results) {
+        if (error) {
+            alert('List table entities error, please open browser console to view detailed error');
+            console.log(error);
+        } 
+        else {
+            var output0 = [];
+            output0.push('<tr>',
+                            
+							'<th>The email</th>',
+                            '<th>The userid</th>',
+                            '<th>The comapany</th>',
+							'<th>The role</th>',
+                            
+                        '</tr>');
+            if (results.entries.length < 1) {
+                output.push('<tr><td>Empty results...</td></tr>');
+            }
+            for (var i = 0, entity; entity = results.entries[i]; i++) {
+                var Email = '';
+                var Roleid = '';
+                var Userid = '';
+				var Company = '';
+                
+                if (typeof entity.Email !== 'undefined') {
+                    Email = entity.Email._;  
+                }
+				if (typeof entity.Userid !== 'undefined') {
+                    Userid = entity.Userid._;
+                    azureuid = Userid;
+					console.log("User id:" + azureuid);
+                }
+				if (typeof entity.Company!== 'undefined') {
+                    Company = entity.Company._;
+					company = Company;
+					console.log("Company Name: " + company);
+				}
+                if (typeof entity.Roleid!== 'undefined') {
+                    Roleid = entity.Roleid._;
+                    
+                    if (Roleid == "ROLE00") {
+                        //Admin UI
+                        userRole = "Admin";
+						document.getElementById("navUser").style.display = "block";
+		                document.getElementById("navEmbed").style.display = "block";
+		                document.getElementById("navVideo").style.display = "block";
+                    }
+                    else if (Roleid == "ROLE01") {
+                        //Free User Interface
+                        userRole = "Free User";
+                    }
+                    else if (Roleid == "ROLE02") {
+                        //Paid User Interface
+                        userRole = "Paid User";
+                        document.getElementById("navEmbed").style.display = "block";
+		                document.getElementById("navVideo").style.display = "block";
+                    }
+					else {
+						userRole = "Super Admin"
+						document.getElementById("navUser").style.display = "block";
+		                document.getElementById("navEmbed").style.display = "block";
+		                document.getElementById("navVideo").style.display = "block";
+					}
+                    console.log("User Role: " + userRole);
+                }
+				
+                output0.push('<tr>',
+                                
+                                '<td>', Email, '</td>',
+                                '<td>', Userid, '</td>',
+                                '<td>', Company, '</td>',
+								'<td>', Roleid, '</td>',
+                                
+                            '</tr>');
+				
+            }
+			queryVideos(azureuid);
+        }
+    });
+}
 
-        tableUri = 'https://' + account + '.table.core.windows.net';
-        var tableService = AzureStorage.Table.createTableServiceWithSas(tableUri, sas).withFilter(new AzureStorage.Table.ExponentialRetryPolicyFilter());
-        return tableService;
-    }
-
-    function queryVideos() {
+    function queryVideos(x) {
         var tableService = getTableService();
         if (!tableService)
             return;
@@ -128,10 +249,8 @@
             return;
         }
 
-
-
         document.getElementById('result').innerHTML = 'Loading video information...';
-        var tableQuery = new AzureStorage.Table.TableQuery().where('Userid eq ?', 'cpp6z10cavht5PDMzzGkeJdtJaB2');
+		var tableQuery = new AzureStorage.Table.TableQuery().where('Userid eq ?', x);
         tableService.queryEntities(table, tableQuery, null, function(error, results) {
             if (error) {
                 alert('List table entities error, please open browser console to view detailed error');
@@ -208,7 +327,7 @@
             }
         });
     }
-	queryVideos();
+	
 
 
 </script>
@@ -230,6 +349,5 @@
  <!-- Global Init -->
  <script src="assets/js/custom.js"></script>
  <script src="assets/css/templatemo-softy-pinko.css"></script>
- <script src="checkuser.js" charset="utf-8"></script>
 </body>
 </html>
