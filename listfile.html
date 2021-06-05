@@ -87,159 +87,41 @@
     </div>
     </div>
 
-    
+    <script src="checkuser.js"></script>
+
 <script>
-    const auth = firebase.auth();
-	var displayName;
-	var email;
-	var uid;
-
-	//Azure Function Variables
-	var userRole;
-	var azureuid;
-	var company;
-	document.getElementById('signOutBtn').onclick = () => auth.signOut();
-	firebase.auth().onAuthStateChanged(function(user) {
-    if (user) {
-        // signed in
-        displayName = user.displayName;
-		console.log("Name:" + displayName);
-        email = user.email;
-        uid = user.uid;
-        
-		checkRole(email);
-
-		} else {
-        // return to login page 
-        window.location.replace("index.html");
-  
-    }
-});
+    document.getElementById('result').innerHTML = 'Loading video information...';
+    var account = "tinylogtable";
+    var sas = '?sv=2020-02-10&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-06-25T20:34:09Z&st=2021-04-26T12:34:09Z&spr=https&sig=Uo60BucTjM1ppcvyz6cIvGWvmiQc1HQA%2FDc2cMlWmzg%3D';
+    var table = 'videoinfo';
+    var table2 = 'userinfo';
+    var tableUri = '';
 	
-	var account = "tinylogtable";
-	var sas = '?sv=2020-02-10&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-06-25T20:34:09Z&st=2021-04-26T12:34:09Z&spr=https&sig=Uo60BucTjM1ppcvyz6cIvGWvmiQc1HQA%2FDc2cMlWmzg%3D';
-	var table = 'userinfo';
-	var usertable = 'userinfo';
-	var tableUri = '';
-	
-	function checkParameters() {
-
-		if (account == null || account.length < 1)
-		{
-			alert('Please enter a valid storage account name!');
-			return false;
-		}
-		if (sas == null || sas.length < 1)
-		{
-			alert('Please enter a valid SAS Token!');
-			return false;
-		}
-		return true;
-	}
-
-	function getTableService() {
-		
-		if (!checkParameters())
-			return null;
-
-		tableUri = 'https://' + account + '.table.core.windows.net';
-		var tableService = AzureStorage.Table.createTableServiceWithSas(tableUri, sas).withFilter(new AzureStorage.Table.ExponentialRetryPolicyFilter());
-		return tableService;
-	}
-	
-	function checkRole(x) {
-    var tableService = getTableService();
-    if (!tableService)
-        return;
-
-    if (usertable == null || usertable.length < 1) {
-        alert('Please select a table from table list!')
-        return;
-    }
-
-    var usertableQuery = new AzureStorage.Table.TableQuery().where('Email eq ?', x);
-    tableService.queryEntities(usertable, usertableQuery, null , function(error, results) {
-        if (error) {
-            alert('List table entities error, please open browser console to view detailed error');
-            console.log(error);
-        } 
-        else {
-            var output0 = [];
-            output0.push('<tr>',
-                            
-							'<th>The email</th>',
-                            '<th>The userid</th>',
-                            '<th>The comapany</th>',
-							'<th>The role</th>',
-                            
-                        '</tr>');
-            if (results.entries.length < 1) {
-                output.push('<tr><td>Empty results...</td></tr>');
-            }
-            for (var i = 0, entity; entity = results.entries[i]; i++) {
-                var Email = '';
-                var Roleid = '';
-                var Userid = '';
-				var Company = '';
-                
-                if (typeof entity.Email !== 'undefined') {
-                    Email = entity.Email._;  
-                }
-				if (typeof entity.Userid !== 'undefined') {
-                    Userid = entity.Userid._;
-                    azureuid = Userid;
-					console.log("User id:" + azureuid);
-                }
-				if (typeof entity.Company!== 'undefined') {
-                    Company = entity.Company._;
-					company = Company;
-					console.log("Company Name: " + company);
-				}
-                if (typeof entity.Roleid!== 'undefined') {
-                    Roleid = entity.Roleid._;
-                    
-                    if (Roleid == "ROLE00") {
-                        //Admin UI
-                        userRole = "Admin";
-						document.getElementById("navUser").style.display = "block";
-		                document.getElementById("navEmbed").style.display = "block";
-		                document.getElementById("navVideo").style.display = "block";
-                    }
-                    else if (Roleid == "ROLE01") {
-                        //Free User Interface
-                        userRole = "Free User";
-                    }
-                    else if (Roleid == "ROLE02") {
-                        //Paid User Interface
-                        userRole = "Paid User";
-                        document.getElementById("navEmbed").style.display = "block";
-		                document.getElementById("navVideo").style.display = "block";
-                    }
-					else {
-						userRole = "Super Admin"
-						document.getElementById("navUser").style.display = "block";
-		                document.getElementById("navEmbed").style.display = "block";
-		                document.getElementById("navVideo").style.display = "block";
-					}
-                    console.log("User Role: " + userRole);
-                }
-				
-                output0.push('<tr>',
-                                
-                                '<td>', Email, '</td>',
-                                '<td>', Userid, '</td>',
-                                '<td>', Company, '</td>',
-								'<td>', Roleid, '</td>',
-                                
-                            '</tr>');
-				
-            }
-			queryVideos(azureuid);
+    function checkParameters() {
+        if (account == null || account.length < 1)
+        {
+            alert('Please enter a valid storage account name!');
+            return false;
         }
-    });
-}
+        if (sas == null || sas.length < 1)
+        {
+            alert('Please enter a valid SAS Token!');
+            return false;
+        }
 
-    function queryVideos(x) {
+        return true;
+    }
+    function getTableService() {
+        if (!checkParameters())
+            return null;
+
+        tableUri = 'https://' + account + '.table.core.windows.net';
+        var tableService = AzureStorage.Table.createTableServiceWithSas(tableUri, sas).withFilter(new AzureStorage.Table.ExponentialRetryPolicyFilter());
+        return tableService;
+    }
+    
+    function queryVideos() {
+        
         var tableService = getTableService();
         if (!tableService)
             return;
@@ -250,83 +132,201 @@
         }
 
         document.getElementById('result').innerHTML = 'Loading video information...';
-		var tableQuery = new AzureStorage.Table.TableQuery().where('Userid eq ?', x);
-        tableService.queryEntities(table, tableQuery, null, function(error, results) {
-            if (error) {
-                alert('List table entities error, please open browser console to view detailed error');
-                console.log(error);
-            } else {
-                var output = [];
-                output.push('<thead><tr>',
-                               
-                                '<th>Project Name</th>',
-                                '<th>Links count</th>',
-                                '<th>Last modefied</th>',
-                                
-                                '<th>Status</th>',
-                                '<th>Edit</th>',
-                                
-                            '</tr></thead>');
-                if (results.entries.length < 1) {
-                    output.push('<tr><td>Empty results...</td></tr>');
-                }
+
+
+        //GET ALL USER IN SAME COMPANY
+        console.log(Company);
+        if(Company != 'none')
+        {
+            
+            var filter = [];
+            var query ='';
+            var tableQuery;
+            var tableQuery2 = new AzureStorage.Table.TableQuery().where('Company eq ? ', `${String(Company)}`);
+            tableService.queryEntities(table2, tableQuery2, null, function(error, results) {
                 for (var i = 0, entity; entity = results.entries[i]; i++) {
-                    var RedirectUrl = '';
-                    var RedirectTime = '';
-                    var VideoName = '';
-                    var Redirect_Count = '';
-                    var FileName = '';
-                    var FileStatus = '';
-                    //console.log(entity.FileNameOri._);
-                    if (typeof entity.RedirectUrl !== 'undefined') {
-                        RedirectUrl = entity.RedirectUrl._;
-                    }
-
-                    if (typeof entity.VideoName !== 'undefined') {
-                        VideoName = entity.VideoName._;
-                    }
-
-                    if (typeof entity.Redirect_Count !== 'undefined') {
-                        Redirect_Count = entity.Redirect_Count._;
-                    }
-
-                    if (typeof entity.RedirectTime!== 'undefined') {
-                        RedirectTime = entity.RedirectTime._;
-                    }
-                   
-                    if (typeof entity.FileNameOri !== 'undefined') {
-                        FileName = entity.FileNameOri._;
-                        
-                    }
-                    if (typeof entity.FileStatus !== 'undefined') {
-                        FileStatus = entity.FileStatus._;
-                        if(FileStatus == "complete")
-                        {
-                            FileStatus = "<a href='"+entity.FileItemUri._+"'><button type='button' class='btn btn-success'>Download</button></a>";
-                        }
-                        
-                    }
-                    if (typeof entity.RowKey !== 'undefined') {
-                     
-                        RowKey = "<a href='editvideo.html?vid="+entity.RowKey._+"'><button type='button' class='btn btn-success'>edit</button></a>";   
-                        
-                    }
-                    output.push('<tr>',
-                                    
-                                    
-                                    '<td>', VideoName, '</td>',
-                                    '<td>', Redirect_Count, '</td>',
-                                    '<td>', entity.Timestamp._, '</td>',
-                                    '<td>', FileStatus, '</td>',
-                                    '<td>', RowKey, '</td>',
-                                    
-                                '</tr>');
+                        filter.push(AzureStorage.Table.TableQuery.stringFilter("Userid", 'eq', entity.Userid._));
+                    
                 }
-                document.getElementById('result').innerHTML = '<table id="myTable" class="table table-bordered table-condensed display">' + output.join('') + '</table>';
-				$("#myTable").DataTable();
-            }
-        });
+                if(filter.length <= 1)
+                {
+                    query = filter[0];
+                }
+                else
+                {
+                    query = AzureStorage.Table.TableQuery.combineFilters(filter[0], 'or' ,filter[1]);
+                    for (var i = 2; i < filter.length ; i++) {
+                        query = AzureStorage.Table.TableQuery.combineFilters(query, 'or' ,filter[i]);
+                        
+                    }
+                }
+                
+                
+                console.log(query);
+                tableQuery = new AzureStorage.Table.TableQuery().where(query);
+                tableService.queryEntities(table, tableQuery, null, function(error, results) {
+                    if (error) {
+                        alert('List table entities error, please open browser console to view detailed error');
+                        console.log(error);
+                    } else {
+                        var output = [];
+                        output.push('<thead><tr>',
+                                        '<th>Project Name</th>',
+                                        '<th>Links count</th>',
+                                        '<th>Last modefied</th>',
+                                        '<th>Status</th>',
+                                        '<th>Edit</th>',
+                                        
+                                    '</tr></thead>');
+                        if (results.entries.length < 1) {
+                            output.push('<tr ><td colspan=5>Empty results...</td></tr>');
+                        }
+                        for (var i = 0, entity; entity = results.entries[i]; i++) {
+                            var RedirectUrl = '';
+                            var RedirectTime = '';
+                            var VideoName = '';
+                            var Redirect_Count = '';
+                            var FileName = '';
+                            var FileStatus = '';
+                            //console.log(entity.FileNameOri._);
+                            if (typeof entity.RedirectUrl !== 'undefined') {
+                                RedirectUrl = entity.RedirectUrl._;
+                            }
+
+                            if (typeof entity.VideoName !== 'undefined') {
+                                VideoName = entity.VideoName._;
+                            }
+
+                            if (typeof entity.Redirect_Count !== 'undefined') {
+                                Redirect_Count = entity.Redirect_Count._;
+                            }
+
+                            if (typeof entity.RedirectTime!== 'undefined') {
+                                RedirectTime = entity.RedirectTime._;
+                            }
+                        
+                            if (typeof entity.FileNameOri !== 'undefined') {
+                                FileName = entity.FileNameOri._;
+                                
+                            }
+                            if (typeof entity.FileStatus !== 'undefined') {
+                                FileStatus = entity.FileStatus._;
+                                if(FileStatus == "complete")
+                                {
+                                    FileStatus = "<a href='"+entity.FileItemUri._+"'><button type='button' class='btn btn-success'>Download</button></a>";
+                                }
+                                
+                            }
+                            if (typeof entity.RowKey !== 'undefined') {
+                            
+                                RowKey = "<a href='editvideo.html?vid="+entity.RowKey._+"'><button type='button' class='btn btn-success'>Edit</button></a>";   
+                                
+                            }
+                            output.push('<tr>',
+                                            
+                                            
+                                            '<td>', VideoName, '</td>',
+                                            '<td>', Redirect_Count, '</td>',
+                                            '<td>', entity.Timestamp._, '</td>',
+                                            '<td>', FileStatus, '</td>',
+                                            '<td>', RowKey, '</td>',
+                                            
+                                        '</tr>');
+                        }
+                        document.getElementById('result').innerHTML = '<table id="myTable" class="table table-bordered table-condensed display">' + output.join('') + '</table>';
+                        $("#myTable").DataTable();
+                    }
+                });
+            });
+            
+            
+
+
+        }
+        //END OF COMPANY
+        //IF NO COMPANY
+        else
+        {
+            var tableQuery = new AzureStorage.Table.TableQuery().where("Userid eq ?", azureuid);
+            tableService.queryEntities(table, tableQuery, null, function(error, results) {
+                if (error) {
+                    alert('List table entities error, please open browser console to view detailed error');
+                    console.log(error);
+                } else {
+                    var output = [];
+                    output.push('<thead><tr>',
+                                    '<th>Project Name</th>',
+                                    '<th>Links count</th>',
+                                    '<th>Last modefied</th>',
+                                    '<th>Status</th>',
+                                    '<th>Edit</th>',
+                                    
+                                '</tr></thead>');
+                    if (results.entries.length < 1) {
+                        output.push('<tr ><td colspan=5>Empty results...</td></tr>');
+                    }
+                    for (var i = 0, entity; entity = results.entries[i]; i++) {
+                        var RedirectUrl = '';
+                        var RedirectTime = '';
+                        var VideoName = '';
+                        var Redirect_Count = '';
+                        var FileName = '';
+                        var FileStatus = '';
+                        //console.log(entity.FileNameOri._);
+                        if (typeof entity.RedirectUrl !== 'undefined') {
+                            RedirectUrl = entity.RedirectUrl._;
+                        }
+
+                        if (typeof entity.VideoName !== 'undefined') {
+                            VideoName = entity.VideoName._;
+                        }
+
+                        if (typeof entity.Redirect_Count !== 'undefined') {
+                            Redirect_Count = entity.Redirect_Count._;
+                        }
+
+                        if (typeof entity.RedirectTime!== 'undefined') {
+                            RedirectTime = entity.RedirectTime._;
+                        }
+                    
+                        if (typeof entity.FileNameOri !== 'undefined') {
+                            FileName = entity.FileNameOri._;
+                            
+                        }
+                        if (typeof entity.FileStatus !== 'undefined') {
+                            FileStatus = entity.FileStatus._;
+                            if(FileStatus == "complete")
+                            {
+                                FileStatus = "<a href='"+entity.FileItemUri._+"'><button type='button' class='btn btn-success'>Download</button></a>";
+                            }
+                            
+                        }
+                        if (typeof entity.RowKey !== 'undefined') {
+                        
+                            RowKey = "<a href='editvideo.html?vid="+entity.RowKey._+"'><button type='button' class='btn btn-success'>edit</button></a>";   
+                            
+                        }
+                        output.push('<tr>',
+                                        
+                                        
+                                        '<td>', VideoName, '</td>',
+                                        '<td>', Redirect_Count, '</td>',
+                                        '<td>', entity.Timestamp._, '</td>',
+                                        '<td>', FileStatus, '</td>',
+                                        '<td>', RowKey, '</td>',
+                                        
+                                    '</tr>');
+                    }
+                    document.getElementById('result').innerHTML = '<table id="myTable" class="table table-bordered table-condensed display">' + output.join('') + '</table>';
+                    $("#myTable").DataTable();
+                }
+            });
+        }
+
+        //var tableQuery = new AzureStorage.Table.TableQuery().where('Userid eq ? || Userid eq ?',uid_list[0],uid_list[2]);
+        
     }
+    setTimeout(function(){ queryVideos(); }, 2000);
 	
 
 
@@ -349,5 +349,6 @@
  <!-- Global Init -->
  <script src="assets/js/custom.js"></script>
  <script src="assets/css/templatemo-softy-pinko.css"></script>
+ <!--<script src="checkuser.js" charset="utf-8"></script>-->
 </body>
 </html>

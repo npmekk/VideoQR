@@ -20,13 +20,16 @@ var table1 = 'videoinfo';
 var table2 = 'redirectvideo';
 var tableUri = '';
 
-    
+var new_file_name;
     const uploadFiles = async () => {
         try {
             //reportStatus("Uploading video");
+            new_file_name = genRowKey();
+            new_file_name += '.mp4';
+            console.log(new_file_name);
             const promises = [];
             for (const file of fileInput.files) {
-                const blockBlobURL = azblob.BlockBlobURL.fromContainerURL(containerURL, file.name);
+                const blockBlobURL = azblob.BlockBlobURL.fromContainerURL(containerURL,new_file_name);
                 promises.push(azblob.uploadBrowserDataToBlockBlob(
                     azblob.Aborter.none, file, blockBlobURL));
                 
@@ -98,8 +101,8 @@ var tableUri = '';
                             PartitionKey: {'_': partitionKey1},
                             RowKey: {'_': rowKey},
                             FileStatus: {'_': "waiting"},
-                            FileItemUri: {'_': "https://tinylogtable.blob.core.windows.net/itemsvdo-in/"+fileName},
-                            Userid: {'_': access_token},
+                            FileItemUri: {'_': "https://tinylogtable.blob.core.windows.net/itemsvdo-in/"+new_file_name},
+                            Userid: {'_': azureuid},
                             FileNameOri: {'_': fileName},
                             FileSize: {'_': fileSize},
                             VideoName: {'_': name.value},

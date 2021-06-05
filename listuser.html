@@ -8,7 +8,6 @@
     <meta name="author" content="">
     <link href="https://fonts.googleapis.com/css?family=Raleway:100,300,400,500,700,900" rel="stylesheet">
 	<script src="https://www.gstatic.com/firebasejs/7.4.0/firebase.js"></script>
-	<script src="firebaseconfig.js" charset="utf-8"></script>
     <title>User Management</title>
     <footer style="width: auto; height: 145px;"></footer> 
     
@@ -89,40 +88,13 @@
 
 
 <script>
-	//Firebase Variable
-	const auth = firebase.auth();
-	var displayName;
-	var email;
-	var uid;
-
-	//Azure Function Variables
-	var userRole;
-	var azureuid;
-	var company;
-	document.getElementById('signOutBtn').onclick = () => auth.signOut();
-	firebase.auth().onAuthStateChanged(function(user) {
-    if (user) {
-        // signed in
-        displayName = user.displayName;
-		console.log("Name:" + displayName);
-        email = user.email;
-        uid = user.uid;
-        
-		checkRole(email);
-
-		} else {
-        // return to login page 
-        window.location.replace("index.html");
-  
-    }
-});
-	
 	var account = "tinylogtable";
 	var sas = '?sv=2020-02-10&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-06-25T20:34:09Z&st=2021-04-26T12:34:09Z&spr=https&sig=Uo60BucTjM1ppcvyz6cIvGWvmiQc1HQA%2FDc2cMlWmzg%3D';
 	var table = 'userinfo';
-	var usertable = 'userinfo';
 	var tableUri = '';
 	
+	var userRole
+
 	function checkParameters() {
 
 		if (account == null || account.length < 1)
@@ -147,100 +119,8 @@
 		var tableService = AzureStorage.Table.createTableServiceWithSas(tableUri, sas).withFilter(new AzureStorage.Table.ExponentialRetryPolicyFilter());
 		return tableService;
 	}
-	
-	function checkRole(x) {
-    var tableService = getTableService();
-    if (!tableService)
-        return;
 
-    if (usertable == null || usertable.length < 1) {
-        alert('Please select a table from table list!')
-        return;
-    }
-
-    var usertableQuery = new AzureStorage.Table.TableQuery().where('Email eq ?', x);
-    tableService.queryEntities(usertable, usertableQuery, null , function(error, results) {
-        if (error) {
-            alert('List table entities error, please open browser console to view detailed error');
-            console.log(error);
-        } 
-        else {
-            var output0 = [];
-            output0.push('<tr>',
-                            
-                            '<th>The email</th>',
-                            '<th>The userid</th>',
-                            '<th>The comapany</th>',
-							'<th>The role</th>',
-                            
-                        '</tr>');
-            if (results.entries.length < 1) {
-                output.push('<tr><td>Empty results...</td></tr>');
-            }
-            for (var i = 0, entity; entity = results.entries[i]; i++) {
-                var Email = '';
-                var Roleid = '';
-                var Userid = '';
-				var Company = '';
-                
-                if (typeof entity.Email !== 'undefined') {
-                    Email = entity.Email._;  
-                }
-				if (typeof entity.Userid !== 'undefined') {
-                    Userid = entity.Userid._;
-                    azureuid = Userid;
-					console.log("User id:" + azureuid);
-                }
-				if (typeof entity.Company!== 'undefined') {
-                    Company = entity.Company._;
-					
-					company = Company;
-				}
-                if (typeof entity.Roleid!== 'undefined') {
-                    Roleid = entity.Roleid._;
-                    
-                    if (Roleid == "ROLE00") {
-                        //Admin UI
-                        userRole = "Admin";
-						document.getElementById("navUser").style.display = "block";
-		                document.getElementById("navEmbed").style.display = "block";
-		                document.getElementById("navVideo").style.display = "block";
-						listUsers(userRole, company);
-                    }
-                    else if (Roleid == "ROLE01") {
-                        //Free User Interface
-                        userRole = "Free User";
-                    }
-                    else if (Roleid == "ROLE02") {
-                        //Paid User Interface
-                        userRole = "Paid User";
-                        document.getElementById("navEmbed").style.display = "block";
-		                document.getElementById("navVideo").style.display = "block";
-                    }
-					else {
-						userRole = "Super Admin"
-						document.getElementById("navUser").style.display = "block";
-		                document.getElementById("navEmbed").style.display = "block";
-		                document.getElementById("navVideo").style.display = "block";
-						listUsers(userRole);
-					}
-                    console.log("User Role: " + userRole);
-                }
-                output0.push('<tr>',
-                                
-                                '<td>', Email, '</td>',
-                                '<td>', Userid, '</td>',
-                                '<td>', Company, '</td>',
-								'<td>', Roleid, '</td>',
-                                
-                            '</tr>');
-            }
-			
-        }
-    });
-}
-
-	function listUsers(role, company) {
+	function refreshEntityList() {
 		var tableService = getTableService();
 		if (!tableService)
 			return;
@@ -249,20 +129,16 @@
 			alert('Please select a table from table list!')
 			return;
 		}
-		if (role == 'Admin'){
-			var tableQuery = new AzureStorage.Table.TableQuery().where('Company eq ?', company);
-		}
-		else{
-			var tableQuery = new AzureStorage.Table.TableQuery();
-		}
+
+		var tableQuery = new AzureStorage.Table.TableQuery().where('Company eq ?', 'KMITL');
 		tableService.queryEntities(table, tableQuery, null , function(error, results) {
 			if (error) {
 				alert('List table entities error, please open browser console to view detailed error');
 				console.log(error);
 			} 
 			else {
-				var output1 = [];
-				output1.push('<thead><tr>',
+				var output = [];
+				output.push('<thead><tr>',
 								
 								'<th>Display Name</th>',
 								'<th>Email</th>',
@@ -315,11 +191,11 @@
 						}
 						
 					}
-					output1.push('<tr>',
+					output.push('<tr>',
 									
 									'<td id="name',i,'" data-value="',DisplayName,'">', DisplayName, '</td>',
 									'<td id="email',i,'" data-value="',Rowkey,'">', Email, '</td>',
-									'<td id="comp',i,'" data-value="',Company,'">',Company,'</td>',
+									'<td>',Company,'</td>',
 									'<td>',userRole,'</td>',
 									'<td>',
 										'<button type="button" data-toggle="modal" data-target="#ModalData',i,'" class="btn btn-success">edit</button>',
@@ -338,25 +214,22 @@
 													'</div>',
 													'<div class="modal-body">',
 														'<p class="lead text-xs-center">Updating ',DisplayName,'</p>',
-															'<div class="form-group">',
-																'<label for="exampleInputEmail1">Displayname</label>',
-																'<input type="text" id="name',i,'" class="form-control" value="',DisplayName,'">',
-															'</div>',
-															'<div class="form-group">',
-																'<label for="exampleFormControlSelect1">Update Role</label>',
-																'<select  class="form-control" id="role',i,'">',
+															'  <div class="form-group">',
+																	'<label for="exampleInputEmail1">Displayname</label>',
+																	'<input type="text" id="name',i,'" class="form-control" value="',DisplayName,'">',
+																'</div>',
+																'<div class="form-group">',
+																	'<label for="exampleFormControlSelect1">Update Role</label>',
+																	'<select  class="form-control" id="role',i,'">',
 																		'<option ',selected0,' value="a">Admin</option>',
 																		'<option ',selected1,' value="p">Paid User</option>',
 																		'<option ',selected2,' value="f">Free User</option>',
-																'</select>',	  
+																	'</select>',
+																  
 															'</div>',
-															'<div id="sup" style="display:none" class="form-group">',
-																'<label for="exampleInputEmail1">Company</label>',
-																'<input type="text" id="comp',i,'" class="form-control" value="',Company,'">',
-															'</div>',
-															'<button type="button" onclick="update_user(',i,')" class="btn btn-success btn-block">Submit</button>',
-															'<button id="admin" style="display:none" type="button" onclick="remove_user(',i,')" class="btn btn-primary btn-block">Remove from company</button>',
-															'<button id="sup" style="display:none" type="button" onclick="delete_user(',i,')" class="btn btn-danger btn-block">DELETE</button>',
+															  
+															'<button type="button" onclick="update_user(',i,')" class="btn btn-primary btn-block">Submit</button>',
+															'<button type="button" onclick="delete_user(',i,')" class="btn btn-danger btn-block">DELETE USER</button>',
 														
 													'</div>',
 												'</div>',
@@ -364,34 +237,26 @@
 										'</div>'
 								
 								);
-								
 				}
 			
 				//To print result of table
-				document.getElementById('result').innerHTML = '<table id="myTable" class="table table-bordered table-condensed display">' + output1.join('') + '</table>';
-				$("#myTable").DataTable();
-				if (role == 'Admin'){
-					document.getElementById('admin').style.display = "block"
-				}
-				else{
-					document.getElementById('sup').style.display = "block"
-				}
+				document.getElementById('result').innerHTML = '<table id="myTable" class="table table-bordered table-condensed display">' + output.join('') + '</table>';
+				$("#myTable").DataTable();	
 			}
 		   });
 	}
-	
+	refreshEntityList();
 	
 	function update_user(i)
 	{
 		var displayname = document.getElementById("name"+i).value;
 		var role = document.getElementById("role"+i).value;
-		var company = document.getElementById("comp"+i).value;
 		var rowkey = document.getElementById("email"+i).getAttribute('data-value');
 		
 		if(confirm('Do you want to update '+displayname+' ?'))
 		{	
 			
-			update_user_to_db(rowkey,role,displayname,comp);
+			update_user_to_db(rowkey,role,displayname);
 			
 		}
 		else
@@ -400,25 +265,6 @@
 		}
 	
 	}
-	function remove_user(i)
-	{
-		var displayname = document.getElementById("name"+i).value;
-		var company = document.getElementById("comp"+i).value;
-		var rowkey = document.getElementById("email"+i).getAttribute('data-value');
-		
-		if(confirm('Remove '+displayname+' from '+company+' ?'))
-		{	
-			
-			delete_from_comp(rowkey); //delete from company
-			
-		}
-		else
-		{
-			return false;
-		}
-	
-	}
-	
 	function delete_user(i)
 	{
 		var displayname = document.getElementById("name"+i).value;
@@ -427,7 +273,7 @@
 		if(confirm('Do you want to delete '+displayname+' ?'))
 		{	
 			
-			delete_to_db(rowkey); //delete from company
+			delete_user_to_db(rowkey);
 			
 		}
 		else
@@ -437,38 +283,15 @@
 	
 	}
 	
-	function delete_from_comp(rowkey)
-	{
-		var tableService = getTableService();
-        if (!tableService)
-            return;
-            var updateTask = {
-				PartitionKey: {'_': 'UserInfo'},
-                RowKey: {'_': rowkey},
-                Company: {'_': 'none'}    
-            };
-            
-            tableService.mergeEntity(table, updateTask, function(error, result, response){
-                if(error) {
-                    alert('Delete Information Error');
-                    console.log(error);
-                } else {
-                    alert('User Removed');
-                    console.log(result);
-                    console.log(response);
-					location.reload();
-                    
-                }
-              });
-	}
-	function delete_to_db(rowkey)
+	function delete_user_to_db(rowkey)
 	{
 		var tableService = getTableService();
         if (!tableService)
             return;
             var deleteTask = {
 				PartitionKey: {'_': 'UserInfo'},
-                RowKey: {'_': rowkey}, 
+                RowKey: {'_': rowkey}
+                    
             };
             
             tableService.deleteEntity(table, deleteTask, function(error, result, response){
@@ -483,11 +306,14 @@
                     
                 }
               });
+	
+	
+	
 	}
 	
 	
 	
-	function update_user_to_db(rowkey,role,displayname,comp)
+	function update_user_to_db(rowkey,role,displayname)
 	{
 		switch(role){
 			case 'a':
@@ -510,8 +336,7 @@
 				PartitionKey: {'_': 'UserInfo'},
                 RowKey: {'_': rowkey},
 				Roleid: {'_': role},
-				DisplayName: {'_': displayname},
-				Company: {'_': comp}
+				DisplayName: {'_': displayname}
                     
             };
             
@@ -549,6 +374,7 @@
  <!-- Global Init -->
  <script src="assets/js/custom.js"></script>
  <script src="assets/css/templatemo-softy-pinko.css"></script>
-
+ <script src="firebaseconfig.js" charset="utf-8"></script>
+ <script src="checkuser.js" charset="utf-8"></script>
 </body>
 </html>

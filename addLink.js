@@ -8,9 +8,9 @@ var _CANVAS = document.querySelector("#video-canvas"),
 
 var addid = 0;
 function addLink() {
-  //GET VIDEO CURRENNT TIME
-  _CANVAS.width = _VIDEO.videoWidth/4;
-  _CANVAS.height = _VIDEO.videoHeight/4;
+  //GET VIDEO CURRENNT TIME16
+  _CANVAS.width = _VIDEO.videoWidth/8;
+  _CANVAS.height = _VIDEO.videoHeight/8;
   var aud = document.getElementById('targetVideo');
     console.log(aud.currentTime);
     
@@ -24,7 +24,7 @@ function addLink() {
     seconds = String(seconds).padStart(2, "0");
     var curr_time = hours+':'+minutes+':'+seconds;
   //THUMBNAIL
-  _CTX.drawImage(_VIDEO, 0, 0, _VIDEO.videoWidth/4, _VIDEO.videoHeight/4);
+  _CTX.drawImage(_VIDEO, 0, 0, _VIDEO.videoWidth/8, _VIDEO.videoHeight/8);
   encodedImg = _CANVAS.toDataURL('image/jpeg');
 
 
