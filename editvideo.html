@@ -106,6 +106,11 @@
             video.load();
             //video.play();
             document.getElementById("name").value = results.entries[0].VideoName._;
+            //https://tinylogtable.blob.core.windows.net/itemsvdo-in/2021060715235058.mp4
+            var fn2 = results.entries[0].FileItemUri._
+            fn2 = fn2.substr(55);
+            document.getElementById("fn").value = fn2;
+            document.getElementById("fs").value = results.entries[0].FileSize._;
             count = results.entries[0].Redirect_Count._;
             addid = count;
         });
