@@ -69,6 +69,7 @@ var new_file_name;
                 return tableService;
             }
     function addEntity1() {
+        sendAPI();
                 var tableService = getTableService();
                 if (!tableService)
                     return;

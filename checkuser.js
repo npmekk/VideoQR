@@ -221,6 +221,7 @@ function enterCompCode()
 }
 function get_company_code()
 {
+    
     var companyinfo = "companyinfo";
     var tableService = getTableService();
     if (!tableService)
@@ -250,3 +251,109 @@ function get_company_code()
     });
     
 }
+function show_vid(){
+        
+    //GET VIDEO DATA
+    var tableQuery = new AzureStorage.Table.TableQuery().where('RowKey eq ?', rowkey);
+    //GET REDIRECT URL DATA
+    var tableQuery2 = new AzureStorage.Table.TableQuery().where('Video_ID eq ?', rowkey);
+    //CHECK IF USER IN SAME COMPANY
+    tableService.queryEntities(table, tableQuery, null, function(error, results) {
+        var userid = results.entries[0].Userid._;
+        var tableQuery1 = new AzureStorage.Table.TableQuery().where('Userid eq ?', userid);
+        //SHOW THE OWNER OF VIDEO
+        tableService.queryEntities(table3, tableQuery1, null, function(error, results2) {
+            var user_comp = results2.entries[0].Company._;
+            //IF USER IN SAME COMPANY
+            if(Company == user_comp)
+            {
+                tableService.queryEntities(table, tableQuery, null, function(error, results) {
+                    videoSource.setAttribute('src', results.entries[0].FileItemUri._);
+                    video.appendChild(videoSource);
+                    video.load();
+                    //video.play();
+                    document.getElementById("name").value = results.entries[0].VideoName._;
+                    //https://tinylogtable.blob.core.windows.net/itemsvdo-in/2021060715235058.mp4
+                    var fn2 = results.entries[0].FileItemUri._
+                    fn2 = fn2.substr(55);
+                    document.getElementById("fn").value = fn2;
+                    document.getElementById("fs").value = results.entries[0].FileSize._;
+                    count = results.entries[0].Redirect_Count._;
+                    addid = count;
+                });
+                tableService.queryEntities(table2, tableQuery2, null, function(error, results) {
+                    
+                    var addList = document.getElementById('addlink');
+                    
+                    for(i = 1;i <= count;i++)
+                    {
+                        row_key.push(results.entries[i-1].RowKey._);
+                        var text = document.createElement('div');
+                        text.id = 'additem_' + i;
+                        text.innerHTML = `<label>
+                                            <b id="show_url`+i+`" style="padding-left: 15px"> URL `+i+` </b> 
+                                        </label> 
+                                        <input type="url"  id="url`+i+`"  placeholder="Your URL" required>
+                                        <label>
+                                            <b id="redirect`+i+`" style="padding-left: 15px"> Redirect time `+i+` </b> 
+                                        </label> 
+                                        <input type="text" id="time`+i+`" placeholder="HH:MM:SS " />
+                                        <label>
+                                            <b id="thumbnail`+i+`" style="padding-left: 15px"> Thumbnail `+i+` </b> 
+                                        </label> 
+                                        <img id="img`+i+`" style='height:120px;width:160px;padding-left: 15px' ">
+                                        <button type="button" id="remove`+i+`" data-id="`+i+`" class="btn btn-danger remove" style="margin-left: 15px">X</button>
+                        `;
+
+                        addList.appendChild(text);
+                        document.getElementById("img"+i).src = results.entries[i-1].Image_URi._;
+                        document.getElementById("url"+i).value = results.entries[i-1].RedirectUrl._;
+                        document.getElementById("time"+i).value = results.entries[i-1].RedirectTime._;
+
+
+
+
+                        //ADD TO MODAL
+                        var validatelink = document.getElementById('validatelink');
+                        var docstyle = validatelink.style.display;
+                        if (docstyle == 'none') validatelink.style.display = '';
+                        var text = document.createElement('div');
+                        text.id = 'additem_' + i;
+                        text.innerHTML = `<label>
+                                            <b id="show_url`+i+`" style="padding-left: 15px"> URL `+i+` </b> 
+                                        </label> 
+                                        <input disabled type="url"  id="va_url`+i+`"  placeholder="Your URL" required>
+                                        <label>
+                                            <b id="redirect`+i+`" style="padding-left: 15px"> Redirect time `+i+` </b> 
+                                        </label> 
+                                        <input disabled type="text" id="rtime`+i+`" placeholder="HH:MM:SS " />
+                                        
+                                        <label>
+                                            <b id="thumbnail`+i+`" style="padding-left: 15px"> Thumbnail `+i+` </b> 
+                                        </label> 
+                                        <img id="rimg`+i+`" style='height:120px;width:160px;padding-left: 15px' ">
+                        `;
+                        
+                        validatelink.appendChild(text);
+                        document.getElementById("rimg"+i).src = results.entries[i-1].Image_URi._;
+                        document.getElementById("va_url"+i).value = results.entries[i-1].RedirectUrl._;
+                        document.getElementById("rtime"+i).value = results.entries[i-1].RedirectTime._;
+                        
+                    }
+                    
+                
+                    var thisrowkey = results.entries[0].RowKey._;
+                });
+
+                }
+                else
+                {
+                    alert('You don\'t have permission to edit this video!');
+                    window.location.replace("listfile.html");
+
+                }
+            });
+
+
+        });
+    }

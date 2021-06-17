@@ -1,0 +1,96 @@
+
+<script src="azure-storage-blob.js" charset="utf-8"></script>
+<script src="azure-storage.table.js" charset="utf-8"></script>
+
+<script>
+    function getTableService() {
+		
+		if (!checkParameters())
+			return null;
+
+		tableUri = 'https://' + account + '.table.core.windows.net';
+		var tableService = AzureStorage.Table.createTableServiceWithSas(tableUri, sas).withFilter(new AzureStorage.Table.ExponentialRetryPolicyFilter());
+		return tableService;
+	}
+    function checkParameters() {
+
+        if (account == null || account.length < 1)
+        {
+            alert('Please enter a valid storage account name!');
+            return false;
+        }
+        if (sas == null || sas.length < 1)
+        {
+            alert('Please enter a valid SAS Token!');
+            return false;
+        }
+        return true;
+    }
+const accountName = "tinylogtable";
+const sasString = "?sv=2020-02-10&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-06-25T20:34:09Z&st=2021-04-26T12:34:09Z&spr=https&sig=Uo60BucTjM1ppcvyz6cIvGWvmiQc1HQA%2FDc2cMlWmzg%3D";
+const containerName = "itemsvdo-out";
+const containerURL = new azblob.ContainerURL(
+    `https://${accountName}.blob.core.windows.net/${containerName}?${sasString}`,
+    azblob.StorageURL.newPipeline(new azblob.AnonymousCredential));
+
+var account = "tinylogtable";
+var sas = '?sv=2020-02-10&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-06-25T20:34:09Z&st=2021-04-26T12:34:09Z&spr=https&sig=Uo60BucTjM1ppcvyz6cIvGWvmiQc1HQA%2FDc2cMlWmzg%3D';
+var table1 = 'videoinfo';
+var tableUri = '';
+var tableService = getTableService();
+if (!tableService)
+    //return;
+
+if (table1 == null || table1.length < 1) {
+    alert('Invalid table name!')
+    //return;
+}
+
+
+var partitionKey1 = "VideoInfo";
+console.log(12345);
+var req = new XMLHttpRequest();
+req.responseType = 'json';
+req.open('GET', url, true);
+req.onload  = function() {
+   var jsonResponse = req.response;
+   // do something with jsonResponse
+   console.log(12345);
+   console.log(jsonResponse);
+};
+req.send(null);
+
+
+//ADD TO VIDEOINFO
+
+  /*  var rowKey = genRowKey();
+    
+    var name = document.getElementById('name');
+    var video_id = rowKey;
+    var insertEntity = {
+            PartitionKey: {'_': partitionKey1},
+            RowKey: {'_': rowKey},
+            FileStatus: {'_': "waiting"},
+            FileItemUri: {'_': "https://tinylogtable.blob.core.windows.net/itemsvdo-in/"+new_file_name},
+            Userid: {'_': azureuid},
+            FileNameOri: {'_': fileName},
+            FileSize: {'_': fileSize},
+            VideoName: {'_': name.value},
+            Redirect_Count: {'_': addid}
+
+    };
+    
+    tableService.insertEntity(table1, insertEntity, function(error, result, response) {
+
+        if(error) {
+            alert('Insert Information Error');
+            console.log(error);
+        } else {
+            console.log('Insert Information successfully!');
+            
+            
+        }
+    
+    });*/
+
+    </script>
